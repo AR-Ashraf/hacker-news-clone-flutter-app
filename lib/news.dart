@@ -1,12 +1,9 @@
 import 'package:chips_choice/chips_choice.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:fluttertoast/fluttertoast.dart';
 import 'package:hacker_news_clone/data_helpers/news_api_provider.dart';
-import 'package:hacker_news_clone/data_helpers/news_item_model.dart';
-import 'package:hacker_news_clone/rest_api_handler.dart';
 import 'package:hacker_news_clone/style.dart';
-
-import 'api_helpers/apiConstrants.dart';
 import 'list_widget.dart';
 
 class News extends StatefulWidget{
@@ -20,31 +17,26 @@ class _NewsPageState extends State<News>{
 
   final newsApiProvider = NewsApiProvider();
   int tag = 0;
+  int pastNews = 0;
+  int items = 10;
   List<String> options = [
     'New', 'Past',
   ];
   List<int> ids;
-  Future future;
 
 
   @override
   void initState() {
     super.initState();
-    future = fetchTopIds();
   }
-  fetchTopIds() async {
+  Future <List<int>> fetchTopIds() async {
     ids = await newsApiProvider.fetchTopId();
     return ids;
-
   }
-
-
 
 
   @override
   Widget build(BuildContext context) {
-
-
     return Scaffold(
       appBar:  AppBar(
           title: Row(
@@ -73,16 +65,15 @@ class _NewsPageState extends State<News>{
                       source: options,
                       value: (i, v) => i,
                       label: (i, v) => v,
-                      //tooltip: (i, v) => v,
                     ),
                   ),
                 ],
               ),
             ),
 
-            FutureBuilder <List<int>>(
-                future: future,
-                builder:(context, AsyncSnapshot <List<int>> snapshot) {
+            FutureBuilder (
+                future: fetchTopIds(),
+                builder:(context, snapshot) {
                   if (!snapshot.hasData) {
                     return Center(child: CircularProgressIndicator());
                   } else {
@@ -93,17 +84,14 @@ class _NewsPageState extends State<News>{
                               return Padding(
                                   padding: EdgeInsets.only(top: 5, bottom: 5));
                             },
-                            itemCount: ids.length,
+                            itemCount: items,
                             itemBuilder: (c, i) {
-
-                              return ListWidget(
-                                id: snapshot.data[i],
-                                /*title: "This is a blast!",
-                                metaData: "Do you know what happened? Do you wanna know> Lets discover these things. These are maddy faltu.",
-                                time: "1 min ago",
-                                comment: "50",*/
-
-                              );
+                              if (tag == 1){
+                                i += 30;
+                              }
+                              return  ListWidget(
+                                  id: snapshot.data[i],
+                                );
                             },
                           ),
                         ),
@@ -111,9 +99,6 @@ class _NewsPageState extends State<News>{
                   }
                 }
             ),
-
-
-
 
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -124,6 +109,29 @@ class _NewsPageState extends State<News>{
                     child: TextButton(
                       style: loadButtonStyle,
                       onPressed: (){
+
+                        setState(() {
+                          if((items + 10) <= ids.length){
+                            items += 10;
+                            Fluttertoast.showToast(
+                              msg: "More News Are Loading...",
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              timeInSecForIosWeb: 1,
+                              textColor: Colors.black,
+                              backgroundColor: Color(0xffFFFFFF),
+                            );
+                          } else{
+                            Fluttertoast.showToast(
+                              msg: "No More News Left " + items.toString(),
+                              toastLength: Toast.LENGTH_SHORT,
+                              gravity: ToastGravity.BOTTOM,
+                              timeInSecForIosWeb: 1,
+                              textColor: Colors.black,
+                              backgroundColor: Color(0xffFFFFFF),
+                            );
+                          }
+                        });
                       },
                       child: Text(
                         "Load More",

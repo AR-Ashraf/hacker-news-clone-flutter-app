@@ -14,7 +14,7 @@ class MyApp extends StatelessWidget {
       title: 'Hacker News',
       theme: new ThemeData(
           primarySwatch: Colors.blue,
-          primaryColor: Colors.blue,
+          primaryColor: Colors.white,
           accentColor: Colors.blue,
           brightness: Brightness.light),
       home: News(),

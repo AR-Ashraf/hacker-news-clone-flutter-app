@@ -1,6 +1,8 @@
 import 'package:chips_choice/chips_choice.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:hacker_news_clone/data_helpers/news_api_provider.dart';
+import 'package:hacker_news_clone/data_helpers/news_item_model.dart';
 import 'package:hacker_news_clone/rest_api_handler.dart';
 import 'package:hacker_news_clone/style.dart';
 
@@ -16,10 +18,28 @@ class _NewsPageState extends State<News>{
 
 
 
+  final newsApiProvider = NewsApiProvider();
   int tag = 0;
   List<String> options = [
     'New', 'Past',
   ];
+  List<int> ids;
+  Future future;
+
+
+  @override
+  void initState() {
+    super.initState();
+    future = fetchTopIds();
+  }
+  fetchTopIds() async {
+    ids = await newsApiProvider.fetchTopId();
+    return ids;
+
+  }
+
+
+
 
   @override
   Widget build(BuildContext context) {
@@ -60,27 +80,40 @@ class _NewsPageState extends State<News>{
               ),
             ),
 
-            //SizedBox(height: 5),
+            FutureBuilder <List<int>>(
+                future: future,
+                builder:(context, AsyncSnapshot <List<int>> snapshot) {
+                  if (!snapshot.hasData) {
+                    return Center(child: CircularProgressIndicator());
+                  } else {
+                    return Container(
+                        child: Expanded(
+                          child: ListView.separated(
+                            separatorBuilder: (c, i) {
+                              return Padding(
+                                  padding: EdgeInsets.only(top: 5, bottom: 5));
+                            },
+                            itemCount: ids.length,
+                            itemBuilder: (c, i) {
 
-            Expanded(
-              child: ListView.separated(
-                separatorBuilder: (c, i) {
-                  return Padding(
-                      padding: EdgeInsets.only(top: 5, bottom: 5));
-                },
-                itemCount: 4,
-                itemBuilder: (c, i) {
+                              return ListWidget(
+                                id: snapshot.data[i],
+                                /*title: "This is a blast!",
+                                metaData: "Do you know what happened? Do you wanna know> Lets discover these things. These are maddy faltu.",
+                                time: "1 min ago",
+                                comment: "50",*/
 
-                  return ListWidget(
-                    title: "This is a blast!",
-                    metaData: "Do you know what happened? Do you wanna know> Lets discover these things. These are maddy faltu.",
-                    time: "1 min ago",
-                    comment: "50",
-
-                  );
-                },
-              ),
+                              );
+                            },
+                          ),
+                        ),
+                    );
+                  }
+                }
             ),
+
+
+
 
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,17 +155,6 @@ class _NewsPageState extends State<News>{
 
   }
 
-  static fetchTopId() async {
-    final response = await RestApiHandler.getData(
-        '${apiConstants["hacker_news"]}/topstories.json');
-    return response;
-  }
-
-  static fetchItems(int id) async {
-    final response = await RestApiHandler.getData(
-        '${apiConstants["hacker_news"]}/item/$id.json');
-    return response;
-  }
 
 }
 
